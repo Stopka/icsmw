@@ -1,0 +1,34 @@
+version: "3.9"
+
+x-defaults: &defaults
+  restart: always
+  logging:
+    driver: "json-file"
+    options:
+      max-file: "10"
+      max-size: "1M"
+
+services:
+  icsmw:
+    <<: *defaults
+    image: skorpil/icsmw:latest
+    build:
+      context: .
+      target: prod
+    environment:
+      - 'TZ=${TIMEZONE}'
+      - 'CALENDARS=${CALENDARS}'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${HOST}`)"
+      - "traefik.http.routers.frontend.entrypoints=https"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=8080"
+    networks:
+      proxy:
+
+networks:
+  proxy:
+    external: true
+    name: proxy
