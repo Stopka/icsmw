@@ -1,6 +1,7 @@
 import * as http from 'http'
 import * as process from 'process'
 import { z } from 'zod'
+import * as crypto from 'node:crypto'
 
 const calendarsSchema = z.record(z.string())
 
@@ -8,6 +9,7 @@ const paths = calendarsSchema.parse(
   JSON.parse(process.env.CALENDARS ?? '{}')
 )
 const postfix = process.env.POSTFIX ?? '@icsmw'
+const prefix = crypto.createHash('sha256').update(postfix, 'utf8').digest('hex').substring(0, 8) + '_'
 
 const handleRequest = async (req: http.IncomingMessage): Promise<string> => {
   const pathname = req.url ?? '/'
@@ -24,7 +26,7 @@ const handleRequest = async (req: http.IncomingMessage): Promise<string> => {
     throw new Error(`Calendar ${pathname} responded with empty body!`)
   }
   const calBody = await calResponse.text()
-  return calBody.replace(/^UID:(.*)$/mg, `UID:$1${postfix}`)
+  return calBody.replace(/^UID:(.*)$/mg, `UID:${prefix}$1${postfix}`)
 }
 
 const server = http.createServer()
