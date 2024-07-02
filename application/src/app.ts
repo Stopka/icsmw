@@ -37,7 +37,7 @@ const handleRequest = async (req: http.IncomingMessage): Promise<string> => {
         row = 'UID:' + pathname.replace('/', '') + row.substring(4).split('@')[0] + postfix
       }
       if (row.startsWith('SUMMARY:')) {
-        row = 'SUMMARY:' + row.substring(8) + 'ℹ️'
+        row = 'SUMMARY:' + row.substring(8) + '♕'
       }
       if (row.startsWith('BEGIN:VALARM')) {
         row = 'BEGIN:DISABLEDVALARM'
