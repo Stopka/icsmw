@@ -26,13 +26,12 @@ const handleRequest = async (req: http.IncomingMessage): Promise<string> => {
     throw new Error(`Calendar ${pathname} responded with empty body!`)
   }
   const calBody = await calResponse.text();
-  let rows = calBody.split('\n')
+  let rows = calBody.split('\r\n')
   rows = rows
     // .filter((row) => {
     //   return !row.startsWith('X-GOOGLE-CONFERENCE:')
     // })
     .map((row) => {
-      row = row.trim()
       if (row.startsWith('UID:')) {
         row = 'UID:' + pathname.replace('/', '') + row.substring(4).split('@')[0] + postfix
       }
