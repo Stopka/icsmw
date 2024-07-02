@@ -50,7 +50,7 @@ const handleRequest = async (req: http.IncomingMessage): Promise<string> => {
       }
       return row
     })
-  return rows.join('\n')
+  return rows.join('\r\n')
 }
 
 const server = http.createServer()
