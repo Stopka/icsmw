@@ -1,7 +1,7 @@
 import * as http from 'http'
 import * as process from 'process'
 import { z } from 'zod'
-import * as crypto from 'node:crypto'
+// import * as crypto from 'node:crypto'
 
 const calendarsSchema = z.record(z.string())
 
@@ -9,7 +9,7 @@ const paths = calendarsSchema.parse(
   JSON.parse(process.env.CALENDARS ?? '{}')
 )
 const postfix = process.env.POSTFIX ?? '@icsmw'
-const prefix = crypto.createHash('sha256').update(postfix, 'utf8').digest('hex').substring(0, 8) + '_'
+// const prefix = crypto.createHash('sha256').update(postfix, 'utf8').digest('hex').substring(0, 8) + '_'
 
 const handleRequest = async (req: http.IncomingMessage): Promise<string> => {
   const pathname = req.url ?? '/'
@@ -25,8 +25,32 @@ const handleRequest = async (req: http.IncomingMessage): Promise<string> => {
   if (calResponse.status !== 200) {
     throw new Error(`Calendar ${pathname} responded with empty body!`)
   }
-  const calBody = await calResponse.text()
-  return calBody.replace(/^UID:(.*)$/mg, `UID:${prefix}$1${postfix}`)
+  const calBody = await calResponse.text();
+  let rows = calBody.split('\n')
+  rows = rows
+    // .filter((row) => {
+    //   return !row.startsWith('X-GOOGLE-CONFERENCE:')
+    // })
+    .map((row) => {
+      row = row.trim()
+      if (row.startsWith('UID:')) {
+        row = 'UID:' + pathname.replace('/', '') + row.substring(4).split('@')[0] + postfix
+      }
+      if (row.startsWith('SUMMARY:')) {
+        row = 'SUMMARY:' + row.substring(8) + 'ℹ️'
+      }
+      if (row.startsWith('BEGIN:VALARM')) {
+        row = 'BEGIN:DISABLEDVALARM'
+      }
+      if (row.startsWith('END:VALARM')) {
+        row = 'END:DISABLEDVALARM'
+      }
+      if (row.startsWith('TRANSP:')) {
+        row = 'TRANSP:TRANSPARENT'
+      }
+      return row
+    })
+  return rows.join('\n')
 }
 
 const server = http.createServer()
